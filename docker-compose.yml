@@ -1,0 +1,107 @@
+﻿# docker-compose.yml
+version: '3.8'
+
+services:
+  # FastAPI Machine Learning Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: job-detection-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=dev
+      - MONGODB_URI=mongodb://root:example@mongodb:27017/
+      - MONGODB_DB_NAME=job_detection
+      - JWT_SECRET_KEY=dev_secret_key_change_in_prod
+      - MODEL_VERSION=v1.0.0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./configs:/app/configs
+    networks:
+      - detection-network
+    restart: unless-stopped
+
+  # Primary Datastore
+  mongodb:
+    image: mongo:6.0
+    container_name: job-detection-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - detection-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # MongoDB Prometheus Exporter
+  mongodb-exporter:
+    image: percona/mongodb_exporter:0.40
+    container_name: job-detection-mongo-exporter
+    command:
+      - '--mongodb.uri=mongodb://root:example@mongodb:27017/?authSource=admin'
+    ports:
+      - "9216:9216"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - detection-network
+    restart: unless-stopped
+
+  # Prometheus Metrics Ingestion
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: job-detection-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - detection-network
+    restart: unless-stopped
+
+  # Grafana Dashboard UI
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: job-detection-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - detection-network
+    restart: unless-stopped
+
+networks:
+  detection-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  prometheus_data:
+  grafana_data:
