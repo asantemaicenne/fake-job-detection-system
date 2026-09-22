@@ -1,0 +1,29 @@
+﻿# Python Bytecode & Environments
+__pycache__/
+*.py[cod]
+*.class
+venv/
+env/
+.env
+
+# Model Artifacts (Keep folder, ignore heavy weights)
+src/models/artifacts/*
+!src/models/artifacts/.gitkeep
+
+# Datasets
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# IDEs & System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test & Coverage cache
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
