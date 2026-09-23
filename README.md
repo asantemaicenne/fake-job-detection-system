@@ -15,6 +15,7 @@ An enterprise-grade, end-to-end Machine Learning, NLP, and Explainable AI (XAI) 
 ## System Architecture
 
 ```mermaid
+
 flowchart TD
     Client["Client (Web Demo / REST API / Bulk Upload)"]
     
@@ -61,6 +62,7 @@ flowchart TD
     HITL -->|"Audit Corrections"| Audit
     Telemetry -.->|"Scrape Telemetry"| Prom
 end
+
 ```
 
 ## Core Capabilities & Hardened Security (v1.0.1)
