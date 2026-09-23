@@ -1,6 +1,6 @@
 ﻿# SentinelAI: AI-Based Fake Job Advertisement Detection System
 
-[![Release](https://img.shields.io/badge/Release-v1.0.1-blue.svg)](https://github.com/asantemaicenne/fake-job-detection-system/releases/tag/v1.0.1)
+[![Release](https://img.shields.io/badge/Release-v1.0.1-blue.svg)](https://github.com//fake-job-detection-system/releases/tag/v1.0.1)
 [![CI Pipeline](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml/badge.svg)](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688.svg)](https://fastapi.tiangolo.com/)
@@ -18,9 +18,9 @@ An enterprise-grade, end-to-end Machine Learning, NLP, and Explainable AI (XAI) 
 flowchart TD
     Client["Client (Web Demo / REST API / Bulk Upload)"]
     
-    subgraph Gateway_Layer ["FastAPI Application Gateway"]
+    subgraph Gateway_Layer [FastAPI Application Gateway]
         Gateway["REST API Router & WebSocket Manager"]
-        Sanity["Pre-Inference Validation Layer<br/>(RFC FQDN + Lexical Shannon Entropy)"]
+        Sanity["Pre-Inference Validation Layer<br/>RFC FQDN + Lexical Shannon Entropy"]
         Security["JWT Authentication & RBAC Guards"]
         Telemetry["Prometheus Metrics Middleware"]
         Gateway --> Sanity
@@ -28,39 +28,38 @@ flowchart TD
         Security --> Telemetry
     end
     
-    subgraph ML_Pipeline ["Machine Learning & Explainability Pipeline"]
-        Vector["Dual-Branch Feature Pipeline<br/>(TF-IDF N-Grams + Numerical Scaler)"]
-        Engine["XGBoost Ensemble Classifier (v1.0.0)<br/>Optuna Tuned + TimeSeriesSplit CV"]
+    subgraph ML_Pipeline [Machine Learning & Explainability Pipeline]
+        Vector["Dual-Branch Feature Pipeline<br/>TF-IDF N-Grams + Numerical Scaler"]
+        Engine["XGBoost Ensemble Classifier v1.0.0<br/>Optuna Tuned + TimeSeriesSplit CV"]
         SHAP["SHAP TreeExplainer Attribution Engine"]
-        HITL{"HITL Uncertainty Queue<br/>(0.40 <= p <= 0.65)"}
+        HITL{"HITL Uncertainty Queue<br/>0.40 to 0.65 Confidence Band"}
         Vector --> Engine
         Engine --> SHAP
         Engine --> HITL
     end
     
-    subgraph Data_Layer ["MongoDB Clustered Datastore"]
-        Raw[("raw_jobs<br/>Text Search & Platform Compound Index")]
+    subgraph Data_Layer [MongoDB Clustered Datastore]
+        Raw[("raw_jobs<br/>Text Search & Platform Index")]
         Feat[("job_features<br/>Unique Feature Vectors")]
-        Pred[("predictions<br/>365-Day TTL Expiration Index")]
-        Audit[("feedback<br/>HITL Gold-Standard Verified Store")]
+        Pred[("predictions<br/>365-Day TTL Index")]
+        Audit[("feedback<br/>HITL Verified Store")]
     end
     
-    subgraph Observability ["Observability & Alerting Stack"]
+    subgraph Observability [Observability & Alerting Stack]
         Prom["Prometheus TSDB Engine"]
-        Alert["Alertmanager (Webhook & Notification Relay)"]
+        Alert["Alertmanager (Webhook Relay)"]
         Graf["Grafana Operational Dashboards"]
         Prom --> Alert
         Prom --> Graf
     end
 
     Client -->|"POST /analysis/single"| Gateway
-    Telemetry -->|"Persist Ingestion"| Raw
-    Telemetry -->|"Execute Extraction"| Vector
-    Vector -->|"Store Feature Record"| Feat
-    Engine -->|"Store Prediction Result"| Pred
-    HITL -->|"Audit Corrections"| Audit
-    Telemetry -.->|"Scrape Telemetry"| Prom
-end
+    Telemetry -->|"Persist Payload"| Raw
+    Telemetry -->|"Extract Features"| Vector
+    Vector -->|"Store Vectors"| Feat
+    Engine -->|"Store Prediction"| Pred
+    HITL -->|"Audit Labels"| Audit
+    Telemetry -.->|"Scrape /metrics"| Prom
 ```
 
 ## Core Capabilities & Hardened Security (v1.0.1)
@@ -240,3 +239,4 @@ pytest tests/ -v --durations=10
 - United Nations SDG Goal: Goal 8 - Decent Work and Economic Growth
 - Target Publication Outlets: SCI / Scopus Indexed Journals, IEEE Conference Proceedings, and Patent Filing
 - License: Distributed under the MIT License. See [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/asantemaicenne/fake-job-detection-system/blob/main/LICENSE) for details.
+
