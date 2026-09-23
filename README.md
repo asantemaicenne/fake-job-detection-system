@@ -15,7 +15,6 @@ An enterprise-grade, end-to-end Machine Learning, NLP, and Explainable AI (XAI) 
 ## System Architecture
 
 ```mermaid
-
 flowchart TD
     Client["Client (Web Demo / REST API / Bulk Upload)"]
     
@@ -61,14 +60,7 @@ flowchart TD
     Engine -->|"Store Prediction"| Pred
     HITL -->|"Audit Labels"| Audit
     Telemetry -.->|"Scrape /metrics"| Prom
-    Telemetry -->|"Persist Ingestion"| Raw
-    Telemetry -->|"Execute Extraction"| Vector
-    Vector -->|"Store Feature Record"| Feat
-    Engine -->|"Store Prediction Result"| Pred
-    HITL -->|"Audit Corrections"| Audit
-    Telemetry -.->|"Scrape Telemetry"| Prom
 end
-
 ```
 
 ## Core Capabilities & Hardened Security (v1.0.1)
