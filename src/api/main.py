@@ -256,8 +256,7 @@ async def live_demo_interface() -> HTMLResponse:
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-bold text-white tracking-tight text-base">SentinelAI</span>
-              <span class="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono">BCA_18</span>
+              <span class="font-bold text-white tracking-tight text-base">AI-Based</span>
             </div>
             <p class="text-[11px] text-slate-400 font-medium leading-none mt-0.5">Fake Job Advertisement Detection Platform</p>
           </div>
@@ -265,8 +264,7 @@ async def live_demo_interface() -> HTMLResponse:
 
         <div class="flex items-center gap-3 sm:gap-4">
           <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-slate-400 border border-slate-800 bg-slate-900/60 px-3 py-1.5 rounded-full">
-            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Pipeline Engine: <strong class="text-slate-200">XGBoost v1.0.0</strong></span>
+            <span>Main Engine: <strong class="text-slate-200">XGBoost v1.0.0</strong></span>
           </div>
           <a href="/api/v1/docs" target="_blank" class="text-xs font-semibold text-sky-400 hover:text-sky-300 transition-colors px-3 py-1.5 rounded-md hover:bg-sky-500/10 border border-sky-500/20 flex items-center gap-1.5">
             <span>API Docs</span>
