@@ -94,8 +94,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             ValueError,
         ) as exc:
             logger.error(
-                "Failed to initialize ML models: %s. Falling back to "
-                "heuristics.",
+                "Failed to initialize ML models: %s. Falling back to heuristics.",
                 exc,
             )
             app.state.model_pipeline = None
@@ -183,7 +182,7 @@ async def generate_development_token(
     )
 
 
-# ============================================================================== 
+# ==============================================================================
 # PRODUCTION ENTERPRISE INTERFACE (Google Sans, Responsive 12-Col Grid)
 # ==============================================================================
 @app.get("/demo", response_class=HTMLResponse, include_in_schema=False)
@@ -410,7 +409,7 @@ async def live_demo_interface() -> HTMLResponse:
                 </div>
               </div>
 
-              <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3.5">
+              <div class="p-4 sm:p-3.5 relative overflow-hidden ">
                 <span class="body-secondary text-slate-400 block mb-1">HITL Review Queue</span>
                 <span id="stat-hitl" class="text-sm font-bold font-mono block mt-1">Not Required</span>
                 <span id="stat-hitl-desc" class="text-[11px] text-slate-500 block mt-0.5">High probability margin</span>

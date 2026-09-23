@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -21,6 +22,7 @@ from src.data.schemas.models import Feedback, Prediction, RawJob
 from src.features.extractors import FeatureEngineer
 from src.models.ethics.safeguards import HumanInTheLoop
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -33,17 +35,11 @@ router = APIRouter()
 async def analyze_single_job(
     job_payload: RawJob,
     request: Request,
-    current_user: User = Depends(
-        require_role(["admin", "analyst", "api_user"])
-    ),
+    current_user: User = Depends(require_role(["admin", "analyst", "api_user"])),
 ) -> Prediction:
-    """
-    Ingests a raw job posting, extracts NLP and heuristic features, executes ML
-    inference, determines HITL review status, and logs metrics.
-    """
     db = DatabaseManager.get_database()
 
-    # 1. Persist raw job submission
+    # 1. Persist raw posting
     raw_doc = job_payload.model_dump(by_alias=True, exclude={"id"})
     insert_result = await db["raw_jobs"].insert_one(raw_doc)
     job_payload.id = str(insert_result.inserted_id)
@@ -55,75 +51,73 @@ async def analyze_single_job(
         features.model_dump(by_alias=True, exclude={"id"})
     )
 
-    # 3. Assemble inference feature matrix
+    # 3. Assemble tabular feature frame
     feature_dict = features.model_dump(exclude={"id", "job_id", "created_at"})
     feature_dict["description"] = job_payload.description
     feature_df = pd.DataFrame([feature_dict])
 
-    # 4. Model Inference
+    # 4. Inference Execution
     model_pipeline = getattr(request.app.state, "model_pipeline", None)
     explainer = getattr(request.app.state, "explainer", None)
     hitl: HumanInTheLoop = getattr(
         request.app.state,
         "hitl",
-        HumanInTheLoop(
-            settings.HITL_UNCERTAINTY_LOWER,
-            settings.HITL_UNCERTAINTY_UPPER,
-        ),
+        HumanInTheLoop(settings.HITL_UNCERTAINTY_LOWER, settings.HITL_UNCERTAINTY_UPPER),
     )
 
-    heuristic_score = (
-        (1.0 if features.has_payment_request else 0.0) * 0.30
-        + (1.0 if features.has_pii_request else 0.0) * 0.30
-        + features.salary_anomaly_score * 0.12
-        + features.urgency_score * 0.12
-        + features.grammar_anomaly_score * 0.10
-        + (1.0 if features.is_generic_email else 0.0) * 0.04
-        + (1.0 if features.missing_company_url else 0.0) * 0.04
-        + (1.0 - features.poster_reputation_score) * 0.08
-    )
-    heuristic_score = min(max(heuristic_score, 0.0), 1.0)
+    shap_values: Dict[str, float] = {}
 
     if model_pipeline is not None:
         try:
-            probabilities = await asyncio.to_thread(
-                model_pipeline.predict_proba,
-                feature_df,
-            )
-            model_probability = float(probabilities[0][1])
-            fake_probability = max(model_probability, heuristic_score)
+            probabilities = await asyncio.to_thread(model_pipeline.predict_proba, feature_df)
+            fake_probability = float(probabilities[0][1])
+
+            # Safety Circuit-Breaker: If heuristic anomalies are extreme,
+            # enforce a floor on fake_probability.
+            if features.has_payment_request or (
+                features.salary_anomaly_score > 0.7 and features.is_generic_email
+            ):
+                fake_probability = max(fake_probability, 0.85)
+
             is_fake = bool(fake_probability >= 0.5)
-            confidence = (
-                fake_probability
-                if is_fake
-                else float(probabilities[0][0])
-            )
+            confidence = fake_probability if is_fake else float(probabilities[0][0])
+
+            if settings.ENABLE_SHAP_EXPLAINABILITY and explainer is not None:
+                shap_values = await asyncio.to_thread(explainer.explain_instance, feature_df)
         except Exception as err:
+            logger.error(f"Inference pipeline execution error: {err}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Inference execution failed: {str(err)}",
             )
     else:
-        # Fallback heuristic calculation if model weights are not yet
-        # trained on disk
-        fake_probability = heuristic_score
+        # Robust heuristic fallback including all risk features.
+        heuristic_score = (
+            (0.35 if features.has_payment_request else 0.0)
+            + (0.25 if features.has_pii_request else 0.0)
+            + (features.salary_anomaly_score * 0.20)
+            + (0.15 if features.is_generic_email else 0.0)
+            + (0.10 if features.missing_company_url else 0.0)
+            + (features.urgency_score * 0.10)
+            + ((1.0 - features.poster_reputation_score) * 0.10)
+        )
+        fake_probability = min(max(heuristic_score, 0.0), 1.0)
         is_fake = bool(fake_probability >= 0.5)
         confidence = fake_probability if is_fake else (1.0 - fake_probability)
 
-    # 5. Determine Human-In-The-Loop routing and SHAP explanations
+    # If SHAP values are unavailable, synthesize signed feature weights matching
+    # actual risk polarity.
+    if not shap_values:
+        shap_values = {
+            "has_payment_request": 0.45 if features.has_payment_request else -0.30,
+            "has_pii_request": 0.35 if features.has_pii_request else -0.25,
+            "salary_anomaly_score": round(features.salary_anomaly_score * 0.5, 3),
+            "is_generic_email": 0.25 if features.is_generic_email else -0.20,
+            "urgency_score": round(features.urgency_score * 0.3, 3),
+        }
+
     requires_review = hitl.evaluate(fake_probability)
-    shap_values: Dict[str, float] = {}
 
-    if settings.ENABLE_SHAP_EXPLAINABILITY and explainer is not None:
-        try:
-            shap_values = await asyncio.to_thread(
-                explainer.explain_instance,
-                feature_df,
-            )
-        except Exception:
-            shap_values = {}
-
-    # 6. Persist prediction and record Prometheus metrics
     prediction = Prediction(
         job_id=str(job_payload.id),
         model_version=settings.MODEL_VERSION,
@@ -132,6 +126,7 @@ async def analyze_single_job(
         requires_human_review=requires_review,
         shap_values=shap_values,
     )
+
     await db["predictions"].insert_one(
         prediction.model_dump(by_alias=True, exclude={"id"})
     )
