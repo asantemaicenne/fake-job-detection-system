@@ -13,14 +13,13 @@ An enterprise-grade, end-to-end Machine Learning and NLP system designed to dete
 
 ## System Architecture
 
-+--------------------------------+
-              |  Client (Web / Bulk / Mobile)  |
-              +---------------+----------------+
-                              |
-                        REST / WebSocket
-                              |
-                              v
-                    
++---------------------------------------------------+
+      |  Client (Web / Bulk / Mobile)  |
+      +---------------+----------------+
+                      |
+               REST / WebSocket
+                      |
+                      v
 +-------------------------------------------------------------------+
 |                           FastAPI Layer                           |
 |  - JWT Authentication & RBAC Middleware                           |
@@ -45,10 +44,6 @@ v
 |  - Alertmanager Rules       |   |  - Optuna Hyperparameter Tuned  |
 |  - Grafana Visual Dashboards|   |  - SHAP Explainer (Explainable) |
 +-----------------------------+   +---------------------------------+
-
-```
-
-```
 
 ---
 
