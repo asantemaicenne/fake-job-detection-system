@@ -1,6 +1,6 @@
 ﻿# AI-Based Fake Job Advertisement Detection System
 
-[![CI Pipeline](https://github.com/your-username/fake-job-detection-system/actions/workflows/ci.yml/badge.svg)](https://github.com/your-username/fake-job-detection-system/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml/badge.svg)](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688.svg)](https://fastapi.tiangolo.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248.svg)](https://www.mongodb.com/)
@@ -13,46 +13,23 @@ An enterprise-grade, end-to-end Machine Learning and NLP system designed to dete
 
 ## System Architecture
 
-+---------------------------------------------------+
-      |  Client (Web / Bulk / Mobile)  |
-      +---------------+----------------+
-                      |
-               REST / WebSocket
-                      |
-                      v
-+-------------------------------------------------------------------+
-|                           FastAPI Layer                           |
-|  - JWT Authentication & RBAC Middleware                           |
-|  - Rate Limiting & Prometheus Telemetry Middleware                |
-+-----------------+-------------------------------+-----------------+
-|                               |
-Persist Ingestion / Reads         Inference Pipeline
-|                               |
-v                               v
-+-----------------------------+   +---------------------------------+
-|      MongoDB Cluster        |   |   Feature Extraction & NLP      |
-|  - raw_jobs (Text Indexes)  |   |  - TF-IDF N-grams (1-2)         |
-|  - job_features (Unique ID) |   |  - Heuristic Scam Triggers      |
-|  - predictions (TTL 365d)   |   |  - Linguistic Anomaly Scoring   |
-|  - feedback (HITL Audit)    |   |  - Structural / Domain Signals  |
-+-----------------------------+   +---------------+-----------------+
-|
-v
-+-----------------------------+   +---------------------------------+
-| Observability Stack         |   |    XGBoost Classifier (v1.0.0)  |
-|  - Prometheus Scraper       |<--|  - Temporal Cross-Validation    |
-|  - Alertmanager Rules       |   |  - Optuna Hyperparameter Tuned  |
-|  - Grafana Visual Dashboards|   |  - SHAP Explainer (Explainable) |
-+-----------------------------+   +---------------------------------+
+              +--------------------------------+
+              |  Client (Web / Bulk / Mobile)  |
+              +---------------+----------------+
+                              |
+                        REST / WebSocket
+                              |
+                              v
++-------------------------------------------------------------------+|                           FastAPI Layer                           ||  - JWT Authentication &amp; RBAC Middleware                           ||  - Rate Limiting &amp; Prometheus Telemetry Middleware                |+-----------------+-------------------------------+-----------------+|                               |Persist Ingestion / Reads         Inference Pipeline|                               |v                               v+-----------------------------+   +---------------------------------+|      MongoDB Cluster        |   |   Feature Extraction &amp; NLP      ||  - raw_jobs (Text Indexes)  |   |  - TF-IDF N-grams (1-2)         ||  - job_features (Unique ID) |   |  - Heuristic Scam Triggers      ||  - predictions (TTL 365d)   |   |  - Linguistic Anomaly Scoring   ||  - feedback (HITL Audit)    |   |  - Structural / Domain Signals  |+-----------------------------+   +---------------+-----------------+|v+-----------------------------+   +---------------------------------+| Observability Stack         |   |    XGBoost Classifier (v1.0.0)  ||  - Prometheus Scraper       |&lt;--|  - Temporal Cross-Validation    ||  - Alertmanager Rules       |   |  - Optuna Hyperparameter Tuned  ||  - Grafana Visual Dashboards|   |  - SHAP Explainer (Explainable) |+-----------------------------+   +---------------------------------+
 
 ---
 
 ## Core Capabilities
 
 1. **Multi-Branch NLP Preprocessing:** Merges TF-IDF n-grams with tabular heuristics using scikit-learn `ColumnTransformer`.
-2. **Explicit & Structural Heuristics:** Flags wire transfers, cryptocurrency deposits, sensitive PII requests, generic recruiter domains (`@gmail.com`), and missing company domains.
+2. **Explicit &amp; Structural Heuristics:** Flags wire transfers, cryptocurrency deposits, sensitive PII requests, generic recruiter domains (`@gmail.com`), and missing company domains.
 3. **Temporal Cross-Validation:** Uses `TimeSeriesSplit` during Optuna training to eliminate temporal data leakage.
-4. **Explainability & Ethical Safeguards:** Provides individual prediction feature attributions via SHAP and routes ambiguous classifications ($0.40 \le p \le 0.65$) to a Human-in-the-Loop review queue.
+4. **Explainability &amp; Ethical Safeguards:** Provides individual prediction feature attributions via SHAP and routes ambiguous classifications ($0.40 \le p \le 0.65$) to a Human-in-the-Loop review queue.
 5. **GDPR Right-to-Erasure Utility:** Automated cascade hard-deletion across all database collections.
 6. **Observability:** Prometheus metrics (`/metrics`), Alertmanager rules, and Grafana telemetry.
 
@@ -61,11 +38,12 @@ v
 ## Quickstart
 
 ### Prerequisites
-* Docker & Docker Compose
+* Docker &amp; Docker Compose
 * Python 3.10+
 * Git
 
 ### Local Environment Setup
+
 ```powershell
 # 1. Clone repository
 git clone https://github.com/<your-username>/fake-job-detection-system.git
@@ -86,7 +64,7 @@ python scripts/train_model.py --trials 15 --splits 3
 uvicorn src.api.main:app --reload --port 8000
 ```
 
-## API Endpoints
+## API Reference
 
 | Method | Endpoint | Access Role | Description |
 | --- | --- | --- | --- |
@@ -101,7 +79,17 @@ uvicorn src.api.main:app --reload --port 8000
 
 Interactive OpenAPI documentation is accessible at `http://127.0.0.1:8000/api/v1/docs`.
 
+## Data Schema Overview
+
+| Collection | Key Indexed Fields | Storage Type | Retention / Lifecycle |
+| --- | --- | --- | --- |
+| `raw_jobs` | `description` (text), `source_platform`, `posted_at` | Active Store | 180 days active |
+| `job_features` | `job_id` (unique) | Feature Store | Linked to Raw Job |
+| `predictions` | `job_id` (unique), `timestamp` | Cold Store | 365-day TTL index |
+| `feedback` | `job_id` (unique), `reviewed_at` | Audit Store | Permanent (Gold Standard) |
+
 ## Testing
+
 Execute integration and unit tests:
 
 ```powershell
@@ -109,4 +97,5 @@ pytest tests/ -v
 ```
 
 ## License
+
 Distributed under the MIT License. See `LICENSE` for details.
