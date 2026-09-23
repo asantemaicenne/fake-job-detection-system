@@ -72,13 +72,26 @@ async def analyze_single_job(
         ),
     )
 
+    heuristic_score = (
+        (1.0 if features.has_payment_request else 0.0) * 0.30
+        + (1.0 if features.has_pii_request else 0.0) * 0.30
+        + features.salary_anomaly_score * 0.12
+        + features.urgency_score * 0.12
+        + features.grammar_anomaly_score * 0.10
+        + (1.0 if features.is_generic_email else 0.0) * 0.04
+        + (1.0 if features.missing_company_url else 0.0) * 0.04
+        + (1.0 - features.poster_reputation_score) * 0.08
+    )
+    heuristic_score = min(max(heuristic_score, 0.0), 1.0)
+
     if model_pipeline is not None:
         try:
             probabilities = await asyncio.to_thread(
                 model_pipeline.predict_proba,
                 feature_df,
             )
-            fake_probability = float(probabilities[0][1])
+            model_probability = float(probabilities[0][1])
+            fake_probability = max(model_probability, heuristic_score)
             is_fake = bool(fake_probability >= 0.5)
             confidence = (
                 fake_probability
@@ -93,13 +106,7 @@ async def analyze_single_job(
     else:
         # Fallback heuristic calculation if model weights are not yet
         # trained on disk
-        heuristic_score = (
-            (1.0 if features.has_payment_request else 0.0) * 0.45
-            + (1.0 if features.has_pii_request else 0.0) * 0.30
-            + features.urgency_score * 0.15
-            + (1.0 - features.poster_reputation_score) * 0.10
-        )
-        fake_probability = min(max(heuristic_score, 0.0), 1.0)
+        fake_probability = heuristic_score
         is_fake = bool(fake_probability >= 0.5)
         confidence = fake_probability if is_fake else (1.0 - fake_probability)
 
