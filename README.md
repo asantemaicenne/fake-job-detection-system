@@ -1,13 +1,14 @@
-﻿# AI-Based Fake Job Advertisement Detection System
+﻿# SentinelAI: AI-Based Fake Job Advertisement Detection System
 
+[![Release](https://img.shields.io/badge/Release-v1.0.1-blue.svg)](https://github.com/asantemaicenne/fake-job-detection-system/releases/tag/v1.0.1)
 [![CI Pipeline](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml/badge.svg)](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688.svg)](https://fastapi.tiangolo.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248.svg)](https://www.mongodb.com/)
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-orange.svg)](https://xgboost.readthedocs.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/asantemaicenne/fake-job-detection-system/blob/main/LICENSE)
 
-An enterprise-grade, end-to-end Machine Learning and NLP system designed to detect fraudulent job advertisements, combat recruitment scams, and protect candidates. Built with Python 3.10+, scikit-learn, XGBoost, Optuna, FastAPI, and MongoDB.
+An enterprise-grade, end-to-end Machine Learning, NLP, and Explainable AI (XAI) platform designed to detect fraudulent job advertisements, combat recruitment scams, and protect candidates. Engineered under **Project BCA_18** (Supervisor: **Dr. Priya Dhir**) aligned with **UN SDG 8 (Decent Work and Economic Growth)**.
 
 ---
 
@@ -15,122 +16,227 @@ An enterprise-grade, end-to-end Machine Learning and NLP system designed to dete
 
 ```mermaid
 flowchart TD
-    Client["Client (Web / Bulk Upload / Mobile)"]
+    Client["Client (Web Demo / REST API / Bulk Upload)"]
     
-    subgraph API_Layer ["FastAPI Application Layer"]
-        Gateway["REST API Gateway & WebSocket Router"]
-        Security["JWT Authentication & RBAC"]
+    subgraph Gateway_Layer ["FastAPI Application Gateway"]
+        Gateway["REST API Router & WebSocket Manager"]
+        Sanity["Pre-Inference Validation Layer<br/>(RFC FQDN + Lexical Shannon Entropy)"]
+        Security["JWT Authentication & RBAC Guards"]
         Telemetry["Prometheus Metrics Middleware"]
-        Gateway --> Security
-        Gateway --> Telemetry
+        Gateway --> Sanity
+        Sanity --> Security
+        Security --> Telemetry
     end
     
-    subgraph Pipeline ["Machine Learning Pipeline"]
-        Extract["Feature Extraction & NLP Branch<br/>(TF-IDF N-Grams + Heuristic Scores)"]
-        Model["XGBoost Classifier (v1.0.0)<br/>Optuna Tuned + Temporal CV"]
-        SHAP["SHAP Explainability & HITL Queue"]
-        Extract --> Model
-        Model --> SHAP
+    subgraph ML_Pipeline ["Machine Learning & Explainability Pipeline"]
+        Vector["Dual-Branch Feature Pipeline<br/>(TF-IDF N-Grams + Numerical Scaler)"]
+        Engine["XGBoost Ensemble Classifier (v1.0.0)<br/>Optuna Tuned + TimeSeriesSplit CV"]
+        SHAP["SHAP TreeExplainer Attribution Engine"]
+        HITL{"HITL Uncertainty Queue<br/>(0.40 <= p <= 0.65)"}
+        Vector --> Engine
+        Engine --> SHAP
+        Engine --> HITL
     end
     
-    subgraph Storage ["MongoDB Datastore"]
-        Raw[("raw_jobs<br/>Text Indexed")]
-        Feat[("job_features<br/>Feature Vectors")]
-        Pred[("predictions<br/>365d TTL Expiry")]
-        Audit[("feedback<br/>HITL Gold Standard")]
+    subgraph Data_Layer ["MongoDB Clustered Datastore"]
+        Raw[("raw_jobs<br/>Text Search & Platform Compound Index")]
+        Feat[("job_features<br/>Unique Feature Vectors")]
+        Pred[("predictions<br/>365-Day TTL Expiration Index")]
+        Audit[("feedback<br/>HITL Gold-Standard Verified Store")]
     end
     
-    subgraph Monitoring ["Observability & Monitoring"]
-        Prom["Prometheus Engine"]
-        Alert["Alertmanager (Slack/Webhooks)"]
-        Graf["Grafana Dashboards"]
+    subgraph Observability ["Observability & Alerting Stack"]
+        Prom["Prometheus TSDB Engine"]
+        Alert["Alertmanager (Webhook & Notification Relay)"]
+        Graf["Grafana Operational Dashboards"]
         Prom --> Alert
         Prom --> Graf
     end
 
     Client -->|"POST /analysis/single"| Gateway
-    Security -->|"Store Ingestion"| Raw
-    Security -->|"Extract Features"| Extract
-    Extract -->|"Persist Vector"| Feat
-    Model -->|"Persist Inference"| Pred
-    SHAP -->|"Review Corrections"| Audit
-    Telemetry -.->|"Scrape /metrics"| Prom
+    Telemetry -->|"Persist Ingestion"| Raw
+    Telemetry -->|"Execute Extraction"| Vector
+    Vector -->|"Store Feature Record"| Feat
+    Engine -->|"Store Prediction Result"| Pred
+    HITL -->|"Audit Corrections"| Audit
+    Telemetry -.->|"Scrape Telemetry"| Prom
+end
 ```
 
----
+## Core Capabilities & Hardened Security (v1.0.1)
 
-## Core Capabilities
+- Adversarial Noise & Lexical Entropy Guards: Pre-inference verification computes Shannon character entropy and filters zero-vector out-of-vocabulary (OOV) inputs, preventing synthetic gibberish from bypassing gradient-boosted trees.
+- RFC 1035 Domain & FQDN Validation: Strict verification ensures corporate domains contain recognized public Top-Level Domains (TLDs).
+- Multi-Branch NLP Preprocessing: Merges TF-IDF bi-grams with engineered heuristics (advance-fee solicitations, PII theft keywords, grammatical anomalies, and salary-to-effort anomalies) via scikit-learn ColumnTransformer.
+- Leakage-Free Cross-Validation: Employs TimeSeriesSplit across chronological splits during Optuna optimization to prevent lookahead bias.
+- Explainable AI (XAI): Generates local signed attribution weights for each prediction via shap.TreeExplainer, fulfilling GDPR Right-to-Explanation requirements.
+- Human-in-the-Loop (HITL) Routing: Borderline confidence margins ($0.40 \le p \le 0.65$) are quarantined for human review.
+- Full Observability Stack: Exposes real-time throughput, latency, and fraud ratio spikes via Prometheus, Alertmanager, and Grafana.
+- Cross-Platform Setup & Requirements
 
-1. **Multi-Branch NLP Preprocessing:** Merges TF-IDF n-grams with tabular heuristics using scikit-learn `ColumnTransformer`.
-2. **Explicit &amp; Structural Heuristics:** Flags wire transfers, cryptocurrency deposits, sensitive PII requests, generic recruiter domains (`@gmail.com`), and missing company domains.
-3. **Temporal Cross-Validation:** Uses `TimeSeriesSplit` during Optuna training to eliminate temporal data leakage.
-4. **Explainability &amp; Ethical Safeguards:** Provides individual prediction feature attributions via SHAP and routes ambiguous classifications ($0.40 \le p \le 0.65$) to a Human-in-the-Loop review queue.
-5. **GDPR Right-to-Erasure Utility:** Automated cascade hard-deletion across all database collections.
-6. **Observability:** Prometheus metrics (`/metrics`), Alertmanager rules, and Grafana telemetry.
+## System Prerequisites Across All Devices
 
----
+- Python: 3.10 or 3.11
+- Docker: Docker Desktop (Windows/macOS) or Docker Engine + Docker Compose v2 (Linux)
+- Git: 2.30+
+- Hardware Requirements: Minimum 4 GB RAM, 2 CPU cores, 10 GB disk space.
 
-## Quickstart
+### Option A: Windows Setup (PowerShell)
 
-### Prerequisites
-* Docker &amp; Docker Compose
-* Python 3.10+
-* Git
-
-### Local Environment Setup
+Clone the repository:
 
 ```powershell
-# 1. Clone repository
-git clone https://github.com/<your-username>/fake-job-detection-system.git
-cd fake-job-detection-system
+git clone https://github.com/your-username/fake-job-detection-system.git
+Set-Location -Path "fake-job-detection-system"
+```
 
-# 2. Configure virtual environment
+Initialize Python Virtual Environment:
+
+```powershell
 python -m venv venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -r requirements.txt
+```
 
-# 3. Spin up infrastructure services
-docker-compose up -d mongodb prometheus alertmanager grafana
+Spin up Docker Services (MongoDB, Prometheus, Alertmanager, Grafana):
 
-# 4. Train baseline model artifact
+```powershell
+docker-compose up -d mongodb mongodb-exporter prometheus alertmanager grafana
+```
+
+Train the ML Artifact:
+
+```powershell
 python scripts/train_model.py --trials 15 --splits 3
+```
 
-# 5. Launch FastAPI server
+Start the API Server:
+
+```powershell
 uvicorn src.api.main:app --reload --port 8000
+```
+
+### Option B: macOS Setup (Terminal / Zsh)
+
+Install prerequisites (via Homebrew):
+
+```bash
+brew install python@3.10 git
+# Install Docker Desktop for Mac if not already installed
+```
+
+Clone and navigate:
+
+```bash
+git clone https://github.com/your-username/fake-job-detection-system.git
+cd fake-job-detection-system
+```
+
+Initialize environment:
+
+```bash
+python3.10 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Start infrastructure containers:
+
+```bash
+docker compose up -d mongodb mongodb-exporter prometheus alertmanager grafana
+```
+
+Train model and run the server:
+
+```bash
+python scripts/train_model.py --trials 15 --splits 3
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Option C: Linux / Ubuntu / Debian Setup (Bash)
+
+Install system dependencies:
+
+```bash
+sudo apt update && sudo apt install -y python3-venv python3-pip git curl build-essential
+# Ensure Docker and Docker Compose plugin are installed
+sudo apt install -y docker.io docker-compose-v2
+sudo systemctl enable --now docker
+```
+
+Clone and configure:
+
+```bash
+git clone https://github.com/your-username/fake-job-detection-system.git
+cd fake-job-detection-system
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+Launch Docker stack:
+
+```bash
+sudo docker compose up -d mongodb mongodb-exporter prometheus alertmanager grafana
+```
+
+Train artifact and launch service:
+
+```bash
+python scripts/train_model.py --trials 15 --splits 3
+uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+### Option D: Fully Containerized Deployment (Docker Only)
+
+Run the entire platform (API, Database, Observability) inside containers without local Python configuration:
+
+```bash
+docker compose up -d --build
 ```
 
 ## API Reference
 
 | Method | Endpoint | Access Role | Description |
 | --- | --- | --- | --- |
-| GET | `/health` | Public | Service health and model version check |
-| GET | `/metrics` | Public / Scraper | Prometheus metrics export |
-| POST | `/api/v1/auth/dev-token` | Public | Generate development JWT bearer tokens |
-| POST | `/api/v1/analysis/single` | `admin`, `analyst`, `api_user` | Real-time single job fraud analysis |
-| POST | `/api/v1/analysis/bulk` | `admin`, `analyst` | Batch job submission (up to 100 items) |
-| POST | `/api/v1/analysis/feedback` | `admin`, `analyst` | Submit HITL ground-truth audit reviews |
-| GET | `/api/v1/analysis/results` | `admin`, `analyst` | Paginated prediction query with filters |
-| WS | `/api/v1/analysis/ws/status` | Public | Real-time status update channel |
+| GET | /health | Public | System liveness probe and active model semantic tag |
+| GET | /metrics | Public / Scraper | Prometheus metrics export endpoint |
+| GET | /demo | Public | Interactive Google Sans operations testbench |
+| POST | /api/v1/auth/dev-token | Public | Development JWT authentication issuer |
+| POST | /api/v1/analysis/single | admin, analyst, api_user | Real-time single job fraud and XAI assessment |
+| POST | /api/v1/analysis/bulk | admin, analyst | Batch job submission (up to 100 postings) |
+| POST | /api/v1/analysis/feedback | admin, analyst | Human-in-the-loop audit verification input |
+| GET | /api/v1/analysis/results | admin, analyst | Paginated prediction querying with outcome filters |
+| WS | /api/v1/analysis/ws/status | Public | WebSocket channel for real-time progress updates |
 
-Interactive OpenAPI documentation is accessible at `http://127.0.0.1:8000/api/v1/docs`.
+Interactive OpenAPI documentation is accessible at http://localhost:8000/api/v1/docs.
 
-## Data Schema Overview
+## Data Schema & Retention Policy
 
-| Collection | Key Indexed Fields | Storage Type | Retention / Lifecycle |
+| Collection | Key Indexed Fields | Storage Category | Retention Lifecycle |
 | --- | --- | --- | --- |
-| `raw_jobs` | `description` (text), `source_platform`, `posted_at` | Active Store | 180 days active |
-| `job_features` | `job_id` (unique) | Feature Store | Linked to Raw Job |
-| `predictions` | `job_id` (unique), `timestamp` | Cold Store | 365-day TTL index |
-| `feedback` | `job_id` (unique), `reviewed_at` | Audit Store | Permanent (Gold Standard) |
+| raw_jobs | description (text), source_platform, posted_at | Active Store | 180 days hot storage |
+| job_features | job_id (unique) | Feature Store | Linked to raw posting |
+| predictions | job_id (unique), timestamp | Analytical Store | 365-day automated TTL index |
+| feedback | job_id (unique), reviewed_at | Gold-Standard Store | Permanent audit retention |
 
-## Testing
+## Verification & Automated Test Suites
 
-Execute integration and unit tests:
+The test suite validates input sanitization, adversarial noise immunity, and prediction accuracy:
 
 ```powershell
-pytest tests/ -v
+# Run the full integration and adversarial test suite
+pytest tests/ -v --durations=10
 ```
 
-## License
+## Academic Alignment & Research Deliverables
 
-Distributed under the MIT License. See `LICENSE` for details.
+- Project Identification: BCA_18
+- Project Guide / Supervisor: Dr. Priya Dhir
+- United Nations SDG Goal: Goal 8 - Decent Work and Economic Growth
+- Target Publication Outlets: SCI / Scopus Indexed Journals, IEEE Conference Proceedings, and Patent Filing
+- License: Distributed under the MIT License. See [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/asantemaicenne/fake-job-detection-system/blob/main/LICENSE) for details.

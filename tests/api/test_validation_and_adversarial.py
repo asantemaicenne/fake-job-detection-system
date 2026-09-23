@@ -1,10 +1,12 @@
 import logging
 from typing import Any, Dict
 
+import pandas as pd
 import pytest
 from httpx import AsyncClient
 
 from configs.settings import settings
+from src.models.ethics.safeguards import ExplainabilityEngine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("test_suite_audit")
@@ -63,6 +65,48 @@ async def test_audit_catch_original_bypass_payload(
             "Job title must contain recognizable alphabetic terms",
         ]
     ), f"Expected explicit domain or lexical validation failure message, got: {errors}"
+
+
+def test_explainability_falls_back_when_shap_tree_explainer_rejects_categorical_split() -> None:
+    """Ensure SHAP failures degrade gracefully instead of aborting inference."""
+
+    class ExplainerStub:
+        def shap_values(self, _row):
+            raise RuntimeError(
+                "Categorical split is not yet supported. You can still use TreeExplainer with `feature_perturbation=tree_path_dependent`."
+            )
+
+    class PreprocessorStub:
+        def transform(self, instance_df):
+            return instance_df.to_numpy()
+
+    class PipelineStub:
+        named_steps = {"preprocessor": PreprocessorStub(), "classifier": object()}
+
+    engine = ExplainabilityEngine.__new__(ExplainabilityEngine)
+    engine.preprocessor = PreprocessorStub()
+    engine.classifier = object()
+    engine.explainer = ExplainerStub()
+    engine.feature_names = ["salary_anomaly_score", "urgency_score", "is_generic_email"]
+
+    df = pd.DataFrame(
+        [{
+            "salary_anomaly_score": 0.9,
+            "urgency_score": 0.8,
+            "is_generic_email": True,
+            "has_payment_request": True,
+            "has_pii_request": False,
+            "grammar_anomaly_score": 0.2,
+            "missing_company_url": False,
+            "poster_reputation_score": 0.25,
+            "duplicate_count": 1,
+        }]
+    )
+
+    result = engine.explain_instance(df, top_k=3)
+
+    assert result
+    assert "has_payment_request" in result or "salary_anomaly_score" in result
 
 
 @pytest.mark.asyncio

@@ -588,18 +588,24 @@ async def live_demo_interface() -> HTMLResponse:
           ];
         }
 
+        const verdictDirection = isFake ? 1 : -1;
+
         factors.slice(0, 5).forEach(([name, val]) => {
           const num = typeof val === 'number' ? val : 0;
-          const isRisk = num > 0;
+          const isRisk = verdictDirection * num > 0;
+          const isPositive = num >= 0;
           const absScore = Math.min(Math.abs(num) * 100, 100).toFixed(0);
-          
+          const label = verdictDirection > 0
+            ? (isRisk ? 'Risk Indicator' : 'Authenticity Signal')
+            : (isRisk ? 'Authenticity Signal' : 'Risk Indicator');
+
           const row = document.createElement('div');
           row.className = "space-y-1";
           row.innerHTML = `
             <div class="flex justify-between items-center text-xs">
               <span class="text-slate-300 font-medium">${name.replace(/_/g, ' ')}</span>
               <span class="font-mono font-semibold ${isRisk ? 'text-rose-400' : 'text-emerald-400'}">
-                ${isRisk ? '+' : ''}${Number(num).toFixed(3)} ${isRisk ? '(Risk Indicator)' : '(Authenticity Signal)'}
+                ${num >= 0 ? '+' : ''}${Number(num).toFixed(3)} (${label})
               </span>
             </div>
             <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">

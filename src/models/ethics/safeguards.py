@@ -218,7 +218,14 @@ class ExplainabilityEngine:
             )
             if sorted_attributions:
                 return {k: round(v, 4) for k, v in sorted_attributions.items()}
-        except (AttributeError, IndexError, TypeError, ValueError) as exc:
+        except (
+            AttributeError,
+            IndexError,
+            RuntimeError,
+            TypeError,
+            ValueError,
+            Exception,
+        ) as exc:
             logger.warning(
                 "SHAP explanation failed for instance; using heuristic "
                 "attribution fallback: %s",

@@ -83,7 +83,17 @@ async def analyze_single_job(
             confidence = fake_probability if is_fake else float(probabilities[0][0])
 
             if settings.ENABLE_SHAP_EXPLAINABILITY and explainer is not None:
-                shap_values = await asyncio.to_thread(explainer.explain_instance, feature_df)
+                try:
+                    shap_values = await asyncio.to_thread(
+                        explainer.explain_instance,
+                        feature_df,
+                    )
+                except Exception as explainer_err:
+                    logger.warning(
+                        "SHAP explanation failed during inference; continuing with heuristic attribution: %s",
+                        explainer_err,
+                    )
+                    shap_values = {}
         except Exception as err:
             logger.error(f"Inference pipeline execution error: {err}")
             raise HTTPException(
