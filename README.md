@@ -1,4 +1,4 @@
-##﻿#AI-Based Fake Job Advertisement Detection System
+##﻿ AI-Based Fake Job Advertisement Detection System
 
 [![Release](https://img.shields.io/badge/Release-v1.0.1-blue.svg)](https://github.com//fake-job-detection-system/releases/tag/v1.0.1)
 [![CI Pipeline](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml/badge.svg)](https://github.com/asantemaicenne/fake-job-detection-system/actions/workflows/ci.yml)
