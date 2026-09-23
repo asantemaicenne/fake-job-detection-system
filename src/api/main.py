@@ -202,7 +202,7 @@ async def live_demo_interface() -> HTMLResponse:
         <header class="border-b border-slate-700 pb-4 mb-6 flex justify-between items-center">
           <div>
             <h1 class="text-2xl font-bold text-sky-400">AI-Based Fake Job Detection System</h1>
-            <p class="text-xs text-slate-400">Project BCA_18 | Supervisor: Dr. Priya Dhir</p>
+            <p class="text-xs text-slate-400">Production-ready AI & NLP system to detect fraudulent job advertisements and recruitment scams using FastAPI, XGBoost, Optuna, MongoDB, and Prometheus/Grafana observability.</p>
           </div>
           <span class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs px-2.5 py-1 rounded-full font-mono">v1.0.0 Online</span>
         </header>
