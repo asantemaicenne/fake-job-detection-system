@@ -60,7 +60,6 @@ flowchart TD
     Engine -->|"Store Prediction"| Pred
     HITL -->|"Audit Labels"| Audit
     Telemetry -.->|"Scrape /metrics"| Prom
-end
 ```
 
 ## Core Capabilities & Hardened Security (v1.0.1)
