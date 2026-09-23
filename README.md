@@ -13,14 +13,49 @@ An enterprise-grade, end-to-end Machine Learning and NLP system designed to dete
 
 ## System Architecture
 
-              +--------------------------------+
-              |  Client (Web / Bulk / Mobile)  |
-              +---------------+----------------+
-                              |
-                        REST / WebSocket
-                              |
-                              v
-+-------------------------------------------------------------------+|                           FastAPI Layer                           ||  - JWT Authentication &amp; RBAC Middleware                           ||  - Rate Limiting &amp; Prometheus Telemetry Middleware                |+-----------------+-------------------------------+-----------------+|                               |Persist Ingestion / Reads         Inference Pipeline|                               |v                               v+-----------------------------+   +---------------------------------+|      MongoDB Cluster        |   |   Feature Extraction &amp; NLP      ||  - raw_jobs (Text Indexes)  |   |  - TF-IDF N-grams (1-2)         ||  - job_features (Unique ID) |   |  - Heuristic Scam Triggers      ||  - predictions (TTL 365d)   |   |  - Linguistic Anomaly Scoring   ||  - feedback (HITL Audit)    |   |  - Structural / Domain Signals  |+-----------------------------+   +---------------+-----------------+|v+-----------------------------+   +---------------------------------+| Observability Stack         |   |    XGBoost Classifier (v1.0.0)  ||  - Prometheus Scraper       |&lt;--|  - Temporal Cross-Validation    ||  - Alertmanager Rules       |   |  - Optuna Hyperparameter Tuned  ||  - Grafana Visual Dashboards|   |  - SHAP Explainer (Explainable) |+-----------------------------+   +---------------------------------+
+```mermaid
+flowchart TD
+    Client["Client (Web / Bulk Upload / Mobile)"]
+    
+    subgraph API_Layer ["FastAPI Application Layer"]
+        Gateway["REST API Gateway & WebSocket Router"]
+        Security["JWT Authentication & RBAC"]
+        Telemetry["Prometheus Metrics Middleware"]
+        Gateway --> Security
+        Gateway --> Telemetry
+    end
+    
+    subgraph Pipeline ["Machine Learning Pipeline"]
+        Extract["Feature Extraction & NLP Branch<br/>(TF-IDF N-Grams + Heuristic Scores)"]
+        Model["XGBoost Classifier (v1.0.0)<br/>Optuna Tuned + Temporal CV"]
+        SHAP["SHAP Explainability & HITL Queue"]
+        Extract --> Model
+        Model --> SHAP
+    end
+    
+    subgraph Storage ["MongoDB Datastore"]
+        Raw[("raw_jobs<br/>Text Indexed")]
+        Feat[("job_features<br/>Feature Vectors")]
+        Pred[("predictions<br/>365d TTL Expiry")]
+        Audit[("feedback<br/>HITL Gold Standard")]
+    end
+    
+    subgraph Monitoring ["Observability & Monitoring"]
+        Prom["Prometheus Engine"]
+        Alert["Alertmanager (Slack/Webhooks)"]
+        Graf["Grafana Dashboards"]
+        Prom --> Alert
+        Prom --> Graf
+    end
+
+    Client -->|"POST /analysis/single"| Gateway
+    Security -->|"Store Ingestion"| Raw
+    Security -->|"Extract Features"| Extract
+    Extract -->|"Persist Vector"| Feat
+    Model -->|"Persist Inference"| Pred
+    SHAP -->|"Review Corrections"| Audit
+    Telemetry -.->|"Scrape /metrics"| Prom
+```
 
 ---
 
